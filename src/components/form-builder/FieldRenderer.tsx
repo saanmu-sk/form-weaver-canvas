@@ -1,4 +1,3 @@
-
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -90,13 +89,16 @@ export const FieldRenderer = ({ field, isPreview = false, value, onChange }: Fie
         );
 
       case 'select':
+        // Filter out empty strings and null/undefined values
+        const validOptions = field.options?.filter(option => option && option.trim() !== '') || [];
+        
         return (
           <Select value={localValue} onValueChange={handleChange} disabled={isPreview}>
             <SelectTrigger>
               <SelectValue placeholder={field.placeholder || 'Select an option'} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option, index) => (
+              {validOptions.map((option, index) => (
                 <SelectItem key={index} value={option}>
                   {option}
                 </SelectItem>
@@ -106,9 +108,12 @@ export const FieldRenderer = ({ field, isPreview = false, value, onChange }: Fie
         );
 
       case 'radio':
+        // Filter out empty strings for radio options too
+        const validRadioOptions = field.options?.filter(option => option && option.trim() !== '') || [];
+        
         return (
           <RadioGroup value={localValue} onValueChange={handleChange} disabled={isPreview}>
-            {field.options?.map((option, index) => (
+            {validRadioOptions.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`${field.id}-${index}`} />
                 <Label htmlFor={`${field.id}-${index}`}>{option}</Label>
@@ -118,9 +123,12 @@ export const FieldRenderer = ({ field, isPreview = false, value, onChange }: Fie
         );
 
       case 'checkbox':
+        // Filter out empty strings for checkbox options too
+        const validCheckboxOptions = field.options?.filter(option => option && option.trim() !== '') || [];
+        
         return (
           <div className="space-y-2">
-            {field.options?.map((option, index) => (
+            {validCheckboxOptions.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${field.id}-${index}`}
