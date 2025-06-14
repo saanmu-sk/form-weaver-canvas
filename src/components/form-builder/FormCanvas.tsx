@@ -8,11 +8,18 @@ import { Trash2, GripVertical, Settings } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectField, removeField, reorderFields, updateFormTitle, updateFormDescription } from '@/store/form-builder-slice';
 import { FieldRenderer } from './FieldRenderer';
+import { useEffect, useState } from 'react';
 
 export const FormCanvas = () => {
   const dispatch = useAppDispatch();
   const currentForm = useAppSelector(state => state.formBuilder.currentForm);
   const selectedFieldId = useAppSelector(state => state.formBuilder.selectedFieldId);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure component is mounted on client to avoid SSR issues with react-beautiful-dnd
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   if (!currentForm) {
     return (
@@ -27,11 +34,41 @@ export const FormCanvas = () => {
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
+    
     dispatch(reorderFields({ 
       startIndex: result.source.index, 
       endIndex: result.destination.index 
     }));
   };
+
+  // Don't render drag and drop until client-side
+  if (!isClient) {
+    return (
+      <div className="flex-1 p-6 overflow-y-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Form Header */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <Input
+                value={currentForm.title}
+                onChange={(e) => dispatch(updateFormTitle(e.target.value))}
+                className="text-2xl font-bold border-none p-0 focus-visible:ring-0"
+                placeholder="Form Title"
+              />
+              <Textarea
+                value={currentForm.description || ''}
+                onChange={(e) => dispatch(updateFormDescription(e.target.value))}
+                placeholder="Form description (optional)"
+                className="border-none p-0 focus-visible:ring-0 resize-none"
+                rows={2}
+              />
+            </div>
+          </Card>
+          <div>Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-6 overflow-y-auto">
@@ -57,23 +94,32 @@ export const FormCanvas = () => {
 
         {/* Form Fields */}
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="form-fields">
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+          <Droppable droppableId="form-fields" type="FIELD">
+            {(provided, snapshot) => (
+              <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef} 
+                className={`space-y-4 min-h-[100px] ${
+                  snapshot.isDraggingOver ? 'bg-muted/50 rounded-lg p-2' : ''
+                }`}
+              >
                 {currentForm.fields.map((field, index) => (
                   <Draggable key={field.id} draggableId={field.id} index={index}>
                     {(provided, snapshot) => (
                       <Card
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`p-4 ${
+                        className={`p-4 transition-all ${
                           selectedFieldId === field.id ? 'ring-2 ring-primary' : ''
-                        } ${snapshot.isDragging ? 'shadow-lg' : ''}`}
+                        } ${snapshot.isDragging ? 'shadow-lg rotate-2' : ''}`}
                         onClick={() => dispatch(selectField(field.id))}
                       >
                         <div className="flex items-start gap-3">
-                          <div {...provided.dragHandleProps} className="mt-2">
-                            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+                          <div 
+                            {...provided.dragHandleProps} 
+                            className="mt-2 cursor-grab active:cursor-grabbing"
+                          >
+                            <GripVertical className="w-4 h-4 text-muted-foreground" />
                           </div>
                           
                           <div className="flex-1">
