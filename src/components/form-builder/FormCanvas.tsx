@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, GripVertical, Settings } from 'lucide-react';
-import { useFormBuilderStore } from '@/store/form-builder-store';
-import { FormField } from '@/types/form-builder';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { selectField, removeField, reorderFields, updateFormTitle, updateFormDescription } from '@/store/form-builder-slice';
 import { FieldRenderer } from './FieldRenderer';
 
 export const FormCanvas = () => {
-  const { currentForm, selectedFieldId, selectField, removeField, reorderFields, updateFormTitle, updateFormDescription } = useFormBuilderStore();
+  const dispatch = useAppDispatch();
+  const currentForm = useAppSelector(state => state.formBuilder.currentForm);
+  const selectedFieldId = useAppSelector(state => state.formBuilder.selectedFieldId);
 
   if (!currentForm) {
     return (
@@ -25,7 +27,10 @@ export const FormCanvas = () => {
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    reorderFields(result.source.index, result.destination.index);
+    dispatch(reorderFields({ 
+      startIndex: result.source.index, 
+      endIndex: result.destination.index 
+    }));
   };
 
   return (
@@ -36,13 +41,13 @@ export const FormCanvas = () => {
           <div className="space-y-4">
             <Input
               value={currentForm.title}
-              onChange={(e) => updateFormTitle(e.target.value)}
+              onChange={(e) => dispatch(updateFormTitle(e.target.value))}
               className="text-2xl font-bold border-none p-0 focus-visible:ring-0"
               placeholder="Form Title"
             />
             <Textarea
               value={currentForm.description || ''}
-              onChange={(e) => updateFormDescription(e.target.value)}
+              onChange={(e) => dispatch(updateFormDescription(e.target.value))}
               placeholder="Form description (optional)"
               className="border-none p-0 focus-visible:ring-0 resize-none"
               rows={2}
@@ -64,7 +69,7 @@ export const FormCanvas = () => {
                         className={`p-4 ${
                           selectedFieldId === field.id ? 'ring-2 ring-primary' : ''
                         } ${snapshot.isDragging ? 'shadow-lg' : ''}`}
-                        onClick={() => selectField(field.id)}
+                        onClick={() => dispatch(selectField(field.id))}
                       >
                         <div className="flex items-start gap-3">
                           <div {...provided.dragHandleProps} className="mt-2">
@@ -81,7 +86,7 @@ export const FormCanvas = () => {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                selectField(field.id);
+                                dispatch(selectField(field.id));
                               }}
                             >
                               <Settings className="w-4 h-4" />
@@ -91,7 +96,7 @@ export const FormCanvas = () => {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                removeField(field.id);
+                                dispatch(removeField(field.id));
                               }}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -106,7 +111,7 @@ export const FormCanvas = () => {
                 
                 {currentForm.fields.length === 0 && (
                   <Card className="p-8 text-center text-muted-foreground border-dashed">
-                    <p>Drag fields from the sidebar to build your form</p>
+                    <p>Add fields from the sidebar to build your form</p>
                   </Card>
                 )}
               </div>

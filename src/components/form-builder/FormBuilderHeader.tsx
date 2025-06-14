@@ -1,16 +1,18 @@
 
 import { Button } from '@/components/ui/button';
 import { Save, Eye, Share, Settings } from 'lucide-react';
-import { useFormBuilderStore } from '@/store/form-builder-store';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { createNewForm, saveForm } from '@/store/form-builder-slice';
 import { useToast } from '@/hooks/use-toast';
 
 export const FormBuilderHeader = () => {
-  const { currentForm, saveForm, createNewForm } = useFormBuilderStore();
+  const dispatch = useAppDispatch();
+  const currentForm = useAppSelector(state => state.formBuilder.currentForm);
   const { toast } = useToast();
 
   const handleSave = () => {
     if (currentForm) {
-      saveForm();
+      dispatch(saveForm());
       toast({
         title: 'Form saved',
         description: 'Your form has been saved successfully.',
@@ -32,6 +34,10 @@ export const FormBuilderHeader = () => {
     });
   };
 
+  const handleNewForm = () => {
+    dispatch(createNewForm());
+  };
+
   return (
     <div className="border-b bg-background p-4">
       <div className="flex items-center justify-between">
@@ -45,7 +51,7 @@ export const FormBuilderHeader = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={createNewForm}>
+          <Button variant="outline" onClick={handleNewForm}>
             New Form
           </Button>
           

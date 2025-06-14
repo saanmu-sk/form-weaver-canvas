@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,10 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2 } from 'lucide-react';
-import { useFormBuilderStore } from '@/store/form-builder-store';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { updateField } from '@/store/form-builder-slice';
 
 export const FieldPropertiesPanel = () => {
-  const { currentForm, selectedFieldId, updateField } = useFormBuilderStore();
+  const dispatch = useAppDispatch();
+  const currentForm = useAppSelector(state => state.formBuilder.currentForm);
+  const selectedFieldId = useAppSelector(state => state.formBuilder.selectedFieldId);
   
   const selectedField = currentForm?.fields.find(field => field.id === selectedFieldId);
 
@@ -26,7 +28,7 @@ export const FieldPropertiesPanel = () => {
   }
 
   const handleFieldUpdate = (updates: any) => {
-    updateField(selectedField.id, updates);
+    dispatch(updateField({ fieldId: selectedField.id, updates }));
   };
 
   const addOption = () => {
