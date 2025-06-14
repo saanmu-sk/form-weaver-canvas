@@ -120,28 +120,24 @@ export const FormCanvas = () => {
                       <Card
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`p-4 transition-all ${
+                        className={`group p-4 transition-all cursor-pointer ${
                           selectedFieldId === field.id ? 'ring-2 ring-primary' : ''
                         } ${snapshot.isDragging ? 'shadow-lg rotate-1 z-50' : 'hover:shadow-md'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          dispatch(selectField(field.id));
-                        }}
+                        onClick={() => dispatch(selectField(field.id))}
                       >
                         <div className="flex items-start gap-3">
                           <div 
                             {...provided.dragHandleProps} 
-                            className="mt-2 cursor-grab active:cursor-grabbing hover:text-primary transition-colors"
-                            onMouseDown={(e) => e.stopPropagation()}
+                            className="mt-2 cursor-grab active:cursor-grabbing hover:text-primary transition-colors flex-shrink-0"
                           >
                             <GripVertical className="w-4 h-4 text-muted-foreground" />
                           </div>
                           
-                          <div className="flex-1 pointer-events-none">
+                          <div className="flex-1 min-w-0">
                             <FieldRenderer field={field} isPreview />
                           </div>
                           
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -149,7 +145,6 @@ export const FormCanvas = () => {
                                 e.stopPropagation();
                                 dispatch(selectField(field.id));
                               }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <Settings className="w-4 h-4" />
                             </Button>
@@ -160,7 +155,7 @@ export const FormCanvas = () => {
                                 e.stopPropagation();
                                 dispatch(removeField(field.id));
                               }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                              className="hover:text-destructive"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
