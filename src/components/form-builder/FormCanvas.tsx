@@ -33,8 +33,19 @@ export const FormCanvas = () => {
   }
 
   const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+    console.log('Drag ended:', result);
     
+    if (!result.destination) {
+      console.log('No destination, drag cancelled');
+      return;
+    }
+    
+    if (result.source.index === result.destination.index) {
+      console.log('Same position, no change needed');
+      return;
+    }
+
+    console.log('Reordering fields from', result.source.index, 'to', result.destination.index);
     dispatch(reorderFields({ 
       startIndex: result.source.index, 
       endIndex: result.destination.index 
@@ -94,13 +105,13 @@ export const FormCanvas = () => {
 
         {/* Form Fields */}
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="form-fields" type="FIELD">
+          <Droppable droppableId="form-fields">
             {(provided, snapshot) => (
               <div 
                 {...provided.droppableProps} 
                 ref={provided.innerRef} 
-                className={`space-y-4 min-h-[100px] ${
-                  snapshot.isDraggingOver ? 'bg-muted/50 rounded-lg p-2' : ''
+                className={`space-y-4 min-h-[200px] ${
+                  snapshot.isDraggingOver ? 'bg-muted/30 rounded-lg p-4 border-2 border-dashed border-primary/50' : ''
                 }`}
               >
                 {currentForm.fields.map((field, index) => (
@@ -111,18 +122,22 @@ export const FormCanvas = () => {
                         {...provided.draggableProps}
                         className={`p-4 transition-all ${
                           selectedFieldId === field.id ? 'ring-2 ring-primary' : ''
-                        } ${snapshot.isDragging ? 'shadow-lg rotate-2' : ''}`}
-                        onClick={() => dispatch(selectField(field.id))}
+                        } ${snapshot.isDragging ? 'shadow-lg rotate-1 z-50' : 'hover:shadow-md'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dispatch(selectField(field.id));
+                        }}
                       >
                         <div className="flex items-start gap-3">
                           <div 
                             {...provided.dragHandleProps} 
-                            className="mt-2 cursor-grab active:cursor-grabbing"
+                            className="mt-2 cursor-grab active:cursor-grabbing hover:text-primary transition-colors"
+                            onMouseDown={(e) => e.stopPropagation()}
                           >
                             <GripVertical className="w-4 h-4 text-muted-foreground" />
                           </div>
                           
-                          <div className="flex-1">
+                          <div className="flex-1 pointer-events-none">
                             <FieldRenderer field={field} isPreview />
                           </div>
                           
@@ -134,6 +149,7 @@ export const FormCanvas = () => {
                                 e.stopPropagation();
                                 dispatch(selectField(field.id));
                               }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <Settings className="w-4 h-4" />
                             </Button>
@@ -144,6 +160,7 @@ export const FormCanvas = () => {
                                 e.stopPropagation();
                                 dispatch(removeField(field.id));
                               }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -156,8 +173,9 @@ export const FormCanvas = () => {
                 {provided.placeholder}
                 
                 {currentForm.fields.length === 0 && (
-                  <Card className="p-8 text-center text-muted-foreground border-dashed">
-                    <p>Add fields from the sidebar to build your form</p>
+                  <Card className="p-12 text-center text-muted-foreground border-dashed border-2">
+                    <p className="text-lg">Drop fields here to build your form</p>
+                    <p className="text-sm mt-2">Add fields from the sidebar to get started</p>
                   </Card>
                 )}
               </div>
